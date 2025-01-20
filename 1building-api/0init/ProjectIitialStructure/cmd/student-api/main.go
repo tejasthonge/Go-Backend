@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/tejasthonge/Go-Backend/1building-api/1student-api/pkg/config"
+	"github.com/tejasthonge/Go-Backend/1building-api/ProjectIitialStructure/pkg/config"
 )
 
 func main() {

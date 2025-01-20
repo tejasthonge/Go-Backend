@@ -1,4 +1,4 @@
-module github.com/tejasthonge/Go-Backend/1building-api/1student-api
+module github.com/tejasthonge/Go-Backend/1building-api/ProjectIitialStructure
 go 1.23.4
 
 require (
