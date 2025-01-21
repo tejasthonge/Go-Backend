@@ -30,7 +30,7 @@ func MustLoad() *Config {
 		//we geting form the flag passed at time of runing the our porject
 		//here we geting
 		//this can pass as
-		// go run main.go -config=
+		// go run main.go --config filepath
 		flags := flag.String("config", "", "Path to the configration")
 		flag.Parse()
 
