@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/tejasthonge/Go-Backend/1building-api/1student-api/pkg/config"
-	"github.com/tejasthonge/Go-Backend/1building-api/1student-api/pkg/config/handlers/student"
+	"github.com/tejasthonge/Go-Backend/1building-api/1student-api/pkg/handlers/student"
 )
 
 // go run cmd/student-api/main.go --config config/local.yaml

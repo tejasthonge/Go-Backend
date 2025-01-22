@@ -1,11 +1,7 @@
+package types
 
-
-package types 
-
-type Student struct{
-	Id int
-	Name string 
-	Email string
-
+type Student struct {
+	Id    int
+	Name  string `validate:"required"`
+	Email string `validate:"required"`
 }
-
