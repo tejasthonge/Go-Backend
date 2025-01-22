@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/tejasthonge/Go-Backend/1building-api/1student-api/pkg/config"
+	"github.com/tejasthonge/Go-Backend/1building-api/1student-api/pkg/config/handlers/student"
 )
 
 // go run cmd/student-api/main.go --config config/local.yaml
@@ -23,6 +24,8 @@ func main() {
 
 		res.Write([]byte("Jay Shree Ram"))
 	})
+
+	router.HandleFunc("POST /api/student/create", student.New())
 
 	slog.Info("Server Started at ", slog.String("Adress :", cfg.Addr))
 	server := http.Server{
