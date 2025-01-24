@@ -56,6 +56,7 @@ func New() http.HandlerFunc {
 			response.WriteJson(res, http.StatusBadRequest, response.ValidationError(validationErros))
 			return
 		}
+		
 
 		slog.Info("Creating the Student")
 		response.WriteJson(res, http.StatusCreated, map[string]any{
