@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-
 	"log"
 	"log/slog"
 	"net/http"
@@ -13,19 +12,30 @@ import (
 
 	"github.com/tejasthonge/Go-Backend/1building-api/1student-api/pkg/config"
 	"github.com/tejasthonge/Go-Backend/1building-api/1student-api/pkg/handlers/student"
+	"github.com/tejasthonge/Go-Backend/1building-api/1student-api/pkg/storage/sqlite"
 )
 
 // go run cmd/student-api/main.go --config config/local.yaml
 func main() {
 	slog.Info("Jay Shree Ram,\n wellcome to student api") //it is simler as the fmt.println
-	cfg := config.MustLoad()                              // in this struct we have all the cofig varible
+	//Statep 1 :laoading all the confg
+	cfg := config.MustLoad() // in this struct we have all the cofig varible
+
+	//stape 2 : connecting the database
+	sqliteStorage, err := sqlite.New(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	slog.Info("Storage Initialized successully", slog.String("Env: ", cfg.Env), slog.String("Storage path: ", cfg.StoragePath), slog.String("Version", "1.0.1"))
+
 	router := http.NewServeMux()
 	router.HandleFunc("GET /", func(res http.ResponseWriter, req *http.Request) {
 
 		res.Write([]byte("Jay Shree Ram"))
 	})
 
-	router.HandleFunc("POST /api/student/create", student.New())
+	router.HandleFunc("POST /api/student/create", student.New(sqliteStorage))
 
 	slog.Info("Server Started at ", slog.String("Adress :", cfg.Addr))
 	server := http.Server{
@@ -34,12 +44,12 @@ func main() {
 	}
 
 	//server.ListenAndServe()
-	// this woring properly but
-	//some time requste is prossing and due some resion server wase stoping that
-	//time we have firs complite and running request and then we have to
+	// this working properly but
+	//some time requste is prossing and if due some resione server wase stoping that
+	//time we have first complite and running request and then we have to
 	//stope the single
 	//this is know as ## gressfullsutdown
-	//it is bassicly stutting dowon serve after completing ongoing requist
+	//it is bassicly stutting dowon serve after completing ongoing request
 	done := make(chan os.Signal, 1) //this is buffer chanal
 
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGABRT) //here we passing the chan and which type of signal is comminf for notify
@@ -51,10 +61,10 @@ func main() {
 	}()
 	<-done
 
-	slog.Info("Sutting Down the Server .. ")
-	cxt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	slog.Info("Shutting Down the Server .. ")
+	cxt, cancel := context.WithTimeout(context.Background(), 5*time.Second) //we are provide the fime to shudown but also not shutting down
 	defer cancel()
-	err := server.Shutdown(cxt)
+	err = server.Shutdown(cxt)
 	if err != nil {
 		slog.Error("Faild To Shutting down server", slog.String("Error :", err.Error()))
 	}

@@ -9,11 +9,12 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/tejasthonge/Go-Backend/1building-api/1student-api/pkg/storage"
 	"github.com/tejasthonge/Go-Backend/1building-api/1student-api/pkg/utils/response"
 	"github.com/tejasthonge/Go-Backend/1building-api/1student-api/types"
 )
 
-func New() http.HandlerFunc {
+func New(storage storage.Storage) http.HandlerFunc {
 
 	return func(res http.ResponseWriter, req *http.Request) {
 		var newStudent types.Student
@@ -28,7 +29,7 @@ func New() http.HandlerFunc {
 
 		//if above errror is not getting or geting anthor genalral error at time of Decoding the req.Body
 		if err != nil {
-			response.WriteJson(res, http.StatusBadRequest, err)
+			response.WriteJson(res, http.StatusBadRequest, response.GerneralError(err))
 			return
 		}
 		//now we have to validate the request
@@ -38,7 +39,7 @@ func New() http.HandlerFunc {
 			stape 1
 				-fist get package buy ->go get github.com/go-playground/validator/v10
 			stape 2
-				- add the stags on our struct that you want
+				- add the tags on our struct that you want
 				like
 					-
 					type Student struct {
@@ -56,12 +57,21 @@ func New() http.HandlerFunc {
 			response.WriteJson(res, http.StatusBadRequest, response.ValidationError(validationErros))
 			return
 		}
-		
 
 		slog.Info("Creating the Student")
+
+		id, err := storage.CreateStudent(newStudent.Name, newStudent.Email, newStudent.Age)
+
+		if err != nil {
+			response.WriteJson(res, http.StatusInternalServerError, err)
+		}
+
+		slog.Info("User Created successfully with")
+
 		response.WriteJson(res, http.StatusCreated, map[string]any{
 			"success":     "OK",
 			"new student": newStudent,
+			"id":          id,
 		})
 	}
 }
