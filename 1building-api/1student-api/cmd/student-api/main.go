@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	
 	slog.Info("Storage Initialized successully", slog.String("Env: ", cfg.Env), slog.String("Storage path: ", cfg.StoragePath), slog.String("Version", "1.0.1"))
 
 	router := http.NewServeMux()

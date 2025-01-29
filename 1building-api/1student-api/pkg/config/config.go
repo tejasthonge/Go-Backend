@@ -17,6 +17,7 @@ type Config struct {
 	HTTPServer  `yaml:"http_server"`
 }
 
+
 // we setting these function name as must load that means we are loading all the conig files in this
 func MustLoad() *Config {
 
