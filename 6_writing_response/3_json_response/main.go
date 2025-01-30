@@ -27,9 +27,8 @@ func main() {
 		}
 		//if we not set the Content-Type then it will give by defout text/plain; charset=utf-8
 		//so we hust have to set as application/json as bellow
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json")	
 		//duet to this above it work properly
-		
 
 		json.NewEncoder(w).Encode(response) //this method convert struct to josn and werite in the resopne
 	})

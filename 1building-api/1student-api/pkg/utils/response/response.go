@@ -63,7 +63,7 @@ func ValidationError(errs validator.ValidationErrors) Response {
 		case "required":
 			errMsgList = append(errMsgList, fmt.Sprintf("fild %s is required", err.Field()))
 		default:
-			errMsgList = append(errMsgList, fmt.Sprintf("Invalid field %s", fmt.Sprintf(err.Field())))
+			errMsgList = append(errMsgList, fmt.Sprintf("Invalid field %s", fmt.Sprint(err.Field())))
 		}
 	}
 	//now we join all the eror list in string that we was adding in errMsg
