@@ -1,5 +1,5 @@
 package main
-
+//this and basic eg
 import (
 	"database/sql"
 	"encoding/json"
@@ -8,15 +8,16 @@ import (
 	"io"
 	"net/http"
 
-	_ "github.com/lib/pq" //go get github.com/lib/pq
+
+	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
 const (
 	HOST     = "localhost"
-	PORT     = ":8055"
+	PORT     = "5432"
 	USER     = "boss"
 	PASSWORD = "password"
-	DBNAME   = "boss_playground.db"
+	DBNAME   = "boss_playground" // do not use .db for postgres
 )
 
 type User struct {
@@ -29,35 +30,71 @@ type User struct {
 }
 
 func main() {
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", HOST, PORT, USER, PASSWORD, DBNAME)
-	// connStr ="" //this also work but find why use above
-
-	db, err := sql.Open("postgres", connStr) //it return database  or the err
-	/*
-		Errror to opening the Database  sql: unknown driver "postgres" (forgotten import?)
-		this error ocurs when we not install the driver for postgress
-	*/
+	// Connect to PostgreSQL using the default postgres database
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=postgres sslmode=disable", HOST, PORT, USER, PASSWORD)
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		fmt.Println("Errror to opening the Database ", err)
+		fmt.Println("Error connecting to database: ", err)
 		return
 	}
-	defer db.Close() //after  complint main last call to the databse clossing
-	fmt.Println("Database Opening successfully")
+	defer db.Close() // Ensure the database connection is closed after main completes
+
+	// Step 1: Try to create the new database
+	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s;", DBNAME))
+	if err != nil {
+		if err.Error() == "pq: database \"boss_playground\" already exists" {
+			fmt.Println("Database already exists:", DBNAME)
+		} else {
+			fmt.Println("Error creating database: ", err)
+			return
+		}
+	} else {
+		fmt.Println("Database created successfully with name:", DBNAME)
+	}
+
+	// Connect to the newly created database
+	connStrNewDB := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", HOST, PORT, USER, PASSWORD, DBNAME)
+	dbNew, err := sql.Open("postgres", connStrNewDB)
+	if err != nil {
+		fmt.Println("Error connecting to new database: ", err)
+		return
+	}
+	defer dbNew.Close()
+
+	// Step 2: Create the users table if it doesn't exist
+	_, err = dbNew.Exec(`CREATE TABLE IF NOT EXISTS users(
+		id SERIAL PRIMARY KEY,
+		name TEXT,
+		email TEXT,
+		age INTEGER,
+		roleNo INTEGER,
+		phoneNo BIGINT
+	)`)
+	if err != nil {
+		fmt.Println("Error creating the table:", err)
+		return
+	} else {
+		fmt.Println("Table created successfully!")
+	}
+
+	// Step 3: Setting up HTTP routes
 	router := http.NewServeMux()
-	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Starting the server")
 	})
 
-	router.HandleFunc("GET /api/users ", func(w http.ResponseWriter, r *http.Request) {
-
-		fmt.Println("Geting user")
-
+	// Route to handle getting users (stub for now)
+	router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Getting users")
+		// Here, you can fetch users from DB if needed
 	})
 
-	router.HandleFunc("POST /api/create/user", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Creating the new User")
+	// Route to handle creating a new user
+	router.HandleFunc("/api/create/user", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Creating new user")
 		var userData User
 
+		// Decode incoming JSON body
 		err := json.NewDecoder(r.Body).Decode(&userData)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -65,52 +102,53 @@ func main() {
 				fmt.Fprintf(w, "Required body")
 				return
 			}
-			fmt.Println("Error to conveting the struct", err)
-			fmt.Fprint(w, "Getting the error")
+			fmt.Println("Error decoding the request body", err)
+			fmt.Fprint(w, "Error decoding the request body")
 			return
 		}
+
+		// Insert user into the database
 		var id int
-		row := db.QueryRow(
-			`INSERT INTO user (name ,roleNo ,age ,phone,email)
-			VALUES ( $1 , $2 ,$3 ,$4 ,$s)
-			RETURNING id
-			`,
+		row := dbNew.QueryRow(
+			`INSERT INTO users (name, roleNo, age, phoneNo, email)
+			VALUES ($1, $2, $3, $4, $5)
+			RETURNING id`,
 			userData.Name, userData.RoleNo, userData.Age, userData.Phone, userData.Email,
 		)
 		err = row.Scan(&id)
 		if err != nil {
-			fmt.Println("Error to inseting in db")
+			fmt.Println("Error inserting into DB:", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "error to Strore the user in database")
+			fmt.Fprint(w, "Error storing the user in database")
 			return
 		}
 
-		fmt.Println("User inserted successfully with id: ", id)
-		w.Header().Set("Content-Type", "appliction/json")
+		// Send successful response
+		fmt.Println("User inserted successfully with id:", id)
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 
-		respons := struct {
+		response := struct {
 			Status  string `json:"status"`
 			Message string `json:"message"`
 		}{
 			Status:  "OK",
-			Message: "User Created Successfully",
+			Message: "User created successfully",
 		}
 
-		json.NewEncoder(w).Encode(respons)
-
+		// Return response as JSON
+		json.NewEncoder(w).Encode(response)
 	})
 
+	// Step 4: Start the server
 	server := http.Server{
-		Addr:    PORT,
+		Addr:    ":" + PORT,
 		Handler: router,
 	}
 
-	fmt.Println("Starting the server at port ", PORT)
+	fmt.Println("Starting the server on port", PORT)
 	err = server.ListenAndServe()
-
 	if err != nil {
-		fmt.Println("Error to start the server", err)
+		fmt.Println("Error starting the server:", err)
 	}
-
 }
