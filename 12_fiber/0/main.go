@@ -23,13 +23,12 @@ func main() {
 		id := c.Params("id")
 
 		intId, err := strconv.ParseInt(id, 10, 64)
-		
+		 
 		if err != nil {
 			c.Status(fiber.ErrBadRequest.Code)
 			return c.SendString("Plese pass Valid id")
 		}
 		user := User{
-
 			Status: "OK",
 			Id:     intId,
 			Name:   "Tejas",
