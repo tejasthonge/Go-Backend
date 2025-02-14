@@ -6,7 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenarateJwtToken(user *User) (string, error) {
+func GenerateJwtToken(user *User) (string, error) {
 	secret := []byte("super-secret-key")
 	method := jwt.SigningMethodHS256
 	claims := jwt.MapClaims{
